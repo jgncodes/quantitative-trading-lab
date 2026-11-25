@@ -9,12 +9,12 @@
 | Language | Python 3.12 |
 | Market data provider | `yfinance` only |
 | Current phase | Phase 0 — Core infrastructure |
-| Current step | Step 1 — Repository initialization and Python packaging |
-| Phase 0 progress | 0/10 steps confirmed complete |
+| Current step | Step 2 — Testing infrastructure and GitHub Actions |
+| Phase 0 progress | 1/10 steps confirmed complete |
 | First strategy project | Project 01 — Pairs Trading |
 | Last updated | 2026-11-24 |
 
-No repository implementation or test results have been verified as part of creating this document. The initial status is therefore **not started / not yet verified**. Update it based on actual repository evidence as development proceeds.
+Step 1 is complete based on the user's confirmation on 2026-11-24 and terminal screenshots showing successful editable installation, local import and package builds. Step 2 is in progress; its local quality checks and GitHub workflow have not yet been verified. See the development log for evidence and remaining uncertainties.
 
 ## 1. Project vision
 
@@ -150,8 +150,8 @@ Only the data layer should directly call `yfinance`. Strategies receive standard
 
 | Step | Deliverable | Status | Estimated focused effort |
 | --- | --- | --- | --- |
-| 1 | Repository initialization and Python packaging | Not started | 1–2 hours |
-| 2 | Testing infrastructure and GitHub Actions | Not started | 1–2 hours |
+| 1 | Repository initialization and Python packaging | Complete | 1–2 hours |
+| 2 | Testing infrastructure and GitHub Actions | In progress | 1–2 hours |
 | 3 | Historical market data collection | Not started | 1–2 hours |
 | 4 | Data validation, preprocessing and caching | Not started | 2–3 hours |
 | 5 | Mathematical and statistical utilities | Not started | 2–4 hours |
@@ -167,17 +167,19 @@ Allowed status values: `Not started`, `In progress`, `Blocked`, `Complete`. Mark
 
 ### Step 1 — Repository initialization and Python packaging
 
-- [ ] Create or initialize the Git repository and establish the root directory structure.
-- [ ] Configure Python 3.12 and a local virtual environment using `uv`.
-- [ ] Create `pyproject.toml` and the minimal installable `src/quantlab` package.
-- [ ] Generate and commit `uv.lock`.
-- [ ] Add `.gitignore` (virtual environments, caches, local data, generated artifacts and secrets).
-- [ ] Add initial README, this roadmap and basic contribution guidance.
-- [ ] Select an open-source license before publishing; no license has been selected yet.
-- [ ] Verify a clean environment can install and import the package.
-- [ ] Commit the verified scaffold.
+- [x] Create or initialize the Git repository and establish the root directory structure.
+- [x] Configure Python 3.12 and a local virtual environment using `uv`.
+- [x] Create `pyproject.toml` and the minimal installable `src/quantlab` package.
+- [x] Generate and commit `uv.lock`.
+- [x] Add `.gitignore` (virtual environments, caches, local data, generated artifacts and secrets).
+- [x] Add initial README, this roadmap and basic contribution guidance.
+- [x] Add an open-source license before publishing (LICENSE file visible in Git status; exact license text not inspected).
+- [x] Verify a clean environment can install and import the package.
+- [x] Commit the verified scaffold.
 
 **Acceptance:** a clean checkout can install the package, import `quantlab` and follow documented setup instructions. No strategy implementation is required yet.
+
+Completion is user-confirmed. Screenshots independently show Python 3.12.9, successful editable installation, import from `src/quantlab/__init__.py`, and both distribution builds. The final clean-environment retry, staged file review and commit hash were not separately shown.
 
 Suggested commit: `chore: initialize quantitative trading research package`
 
@@ -513,15 +515,15 @@ The project README must state the question, theory, data, assumptions, reproduct
 
 ### Local quality checks
 
-The following are intended command conventions. Final commands and flags should match the actual tooling configured in Steps 1–2; they have not yet been run for this repository.
+The following are the proposed Step 2 command conventions. They have not yet been verified locally for this repository. The source-only Mypy scope and package-only coverage scope are intentional for the initial setup.
 
 ```bash
 uv sync --locked
-uv run ruff check .
-uv run ruff format --check .
-uv run mypy src
-uv run pytest
-uv run pytest --cov=quantlab --cov-report=term-missing
+uv run --locked ruff check .
+uv run --locked ruff format --check .
+uv run --locked mypy src
+uv run --locked pytest --cov=quantlab --cov-report=term-missing --cov-report=html --cov-report=xml
+uv build
 ```
 
 CI should use locked dependencies, run applicable quality checks and produce a coverage report. Build/install verification can be added once packaging is configured. Keep live data smoke tests optional and separate. Add tests for every new core behavior, especially deterministic financial accounting and edge cases. Coverage is a diagnostic, not a substitute for correctness.
@@ -540,7 +542,7 @@ CI should use locked dependencies, run applicable quality checks and produce a c
 
 | Phase | Deliverable | Status |
 | --- | --- | --- |
-| 0 | Core infrastructure | Not started |
+| 0 | Core infrastructure | In progress (1/10) |
 | 1 | Traditional statistical trading projects | Planned |
 | 2 | Advanced statistical and stochastic models | Planned |
 | 3 | Portfolio optimization and arbitrage | Planned; some methods deferred for data limitations |
@@ -554,12 +556,12 @@ The numbered levels in the strategy catalog describe approximate difficulty; the
 
 ### Current checkpoint
 
-- **Last verified completed step:** None recorded.
+- **Last completed step:** Phase 0, Step 1 — Repository initialization and Python packaging (user-confirmed; partial terminal evidence recorded below).
 - **Current phase:** Phase 0 — Core infrastructure.
-- **Next action:** Step 1 — Repository initialization and Python packaging.
-- **Repository state:** Not yet inspected or verified; local path, remote URL and branch are not recorded.
-- **Tests / CI:** Not configured or verified in this planning session.
-- **Known blockers:** No implementation blocker identified; actual local environment and repository state need to be checked before issuing setup instructions. License selection remains open.
+- **Next action:** Step 2 — Testing infrastructure and GitHub Actions. Install development dependencies, configure tools, add a package smoke test, create the CI workflow, run local checks and verify GitHub results if a remote exists.
+- **Repository state:** Windows local checkout, branch `main` observed; `quantlab` editable installation and package build successful. Remote URL and final Step 1 commit hash not supplied.
+- **Tests / CI:** Not yet verified. Step 2 configuration is proposed: Pytest discovery in `tests` and `projects`, Ruff lint/format, strict Mypy scoped to `src`, branch coverage of `quantlab`, and a Windows/Linux GitHub Actions matrix. Do not set a coverage threshold yet.
+- **Known blockers:** Earlier PATH and import issues resolved. Optional environment deletion initially failed due to an access-denied error; user subsequently confirmed Step 1 complete, but final clean-environment output was not shown. No known active blocker. Exact license text not inspected.
 - **Data source:** `yfinance` only. Do not add CoinGecko, Alpaca, CCXT or any other provider unless the scope is explicitly changed later.
 - **User workflow:** Work through one development step at a time, explain what is being built and why, test before progressing, suggest a descriptive Git commit, and update this file after verified milestones.
 
@@ -568,6 +570,8 @@ The numbered levels in the strategy catalog describe approximate difficulty; the
 | Date | Phase / step | Outcome | Verification / commit |
 | --- | --- | --- | --- |
 | 2026-11-24 | Planning | Agreed on a reusable, tested, yfinance-only quantitative research repository; defined Phase 0 and selected Pairs Trading as the first project. | Planning document only; no implementation verified. |
+| 2026-11-24 | Phase 0, Step 1 | Completed repository initialization and Python packaging, per user confirmation. Added minimal `quantlab` package, `pyproject.toml`, lockfile and initial documentation. `.gitattributes` and missing `.gitkeep` files were recommended during final review. | Terminal evidence: Python 3.12.9; editable installation; successful import from local source; built `.tar.gz` and `.whl`. Final clean recreation and commit hash not separately shown. |
+| 2026-11-24 | Phase 0, Step 2 | Began testing and CI setup. Proposed Pytest, pytest-cov, Ruff, Mypy, smoke test and Windows/Linux CI. | Pending local and remote verification; no tests or CI results claimed. |
 
 ### How to update this file
 
@@ -603,4 +607,4 @@ Upload the latest `ROADMAP.md` to the new chat (and share the current repository
 
 ---
 
-**Next milestone: complete Phase 0, Step 1.**
+**Next milestone: complete Phase 0, Step 2 — Testing infrastructure and GitHub Actions.**

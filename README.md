@@ -1,3 +1,5 @@
+[![CI](https://github.com/USERNAME/quantitative-trading-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/jgncodes/quantitative-trading-lab/actions/workflows/ci.yml)
+
 # Quantitative Trading Lab
 
 A quantitative finance research laboratory focused on the
@@ -61,6 +63,69 @@ Verify the installation:
 ```bash
 uv run python -c "import quantlab; print('Installation successful')"
 ```
+
+## Development
+
+Install the project and development dependencies:
+
+```bash
+uv sync --locked
+```
+
+### Run Tests
+
+```bash
+uv run pytest
+```
+
+### Code Coverage
+
+```bash
+uv run pytest --cov=quantlab --cov-report=term-missing
+```
+
+Generate an HTML coverage report:
+
+```bash
+uv run pytest --cov=quantlab --cov-report=html
+```
+
+The report is generated at `htmlcov/index.html`.
+
+### Linting and Formatting
+
+```bash
+uv run ruff check .
+uv run ruff format --check .
+```
+
+Automatically fix supported linting issues and format code:
+
+```bash
+uv run ruff check . --fix
+uv run ruff format .
+```
+
+### Static Type Checking
+
+```bash
+uv run mypy src
+```
+
+### Run All Quality Checks (Windows)
+
+```powershell
+.\scripts\check.ps1
+```
+
+### Continuous Integration
+
+GitHub Actions runs automated tests, coverage reporting,
+linting, formatting, static type checking, and package
+build verification on Windows and Linux.
+
+Automated tests use deterministic data and do not require
+live market data services or API credentials.
 
 ## Repository Structure
 
