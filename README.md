@@ -1,5 +1,3 @@
-[![CI](https://github.com/USERNAME/quantitative-trading-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/jgncodes/quantitative-trading-lab/actions/workflows/ci.yml)
-
 # Quantitative Trading Lab
 
 A quantitative finance research laboratory focused on the
@@ -135,6 +133,61 @@ live market data services or API credentials.
 - `data/`: Local market data storage.
 - `configs/`: Experiment configurations.
 - `docs/`: Technical documentation.
+
+## Historical Market Data
+
+The shared `quantlab.data` module provides historical
+market data collection through Yahoo Finance using
+the `yfinance` library.
+
+### Supported Instruments
+
+- Stocks
+- Exchange-traded funds (ETFs)
+- Cryptocurrencies
+- Other compatible Yahoo Finance instruments
+
+### Example
+
+<!-- ```python
+from quantlab.data import load_historical_data
+
+data = load_historical_data(
+    tickers=["AAPL", "SPY", "BTC-USD"],
+    start_date="2020-01-01",
+    end_date="2026-01-01",
+)
+
+print(data["AAPL"].head())
+``` -->
+
+The loader returns one Pandas DataFrame per ticker.
+
+### Data Conventions
+
+- Daily historical observations.
+- Inclusive start dates and exclusive end dates.
+- Automatic OHLC price adjustment disabled.
+- Separate adjusted closing prices when available.
+- Missing prices are not forward-filled.
+- Individual asset trading calendars are preserved.
+- Failed or incomplete ticker downloads raise explicit errors.
+
+### Demonstration
+
+Run the historical market data demonstration:
+
+```bash
+uv run python scripts/download_demo.py
+```
+
+This demonstration requires an internet connection.
+
+Automated tests use mocked Yahoo Finance responses
+and do not require network access.
+
+Historical market data is intended for educational
+research and is not guaranteed to be complete or accurate.
 
 ## Development Roadmap
 

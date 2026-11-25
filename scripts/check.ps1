@@ -43,22 +43,10 @@ elseif ($LASTEXITCODE -ne 0) {
     throw "Ruff linting failed to execute."
 }
 
-# 3. Check and automatically fix formatting
-Write-Host "`n=== Ruff formatting ===" -ForegroundColor Cyan
-
-uv run --locked ruff format --check .
-
-if ($LASTEXITCODE -eq 1) {
-    Write-Host "Formatting issues detected. Formatting files..." `
-        -ForegroundColor Yellow
-
-    Invoke-Check -Name "Automatic formatting" -Arguments @(
-        "run", "--locked", "ruff", "format", "."
-    )
-}
-elseif ($LASTEXITCODE -ne 0) {
-    throw "Ruff formatting failed to execute."
-}
+# 3. Automatically fix formatting
+Invoke-Check -Name "Automatic formatting" -Arguments @(
+    "run", "--locked", "ruff", "format", "."
+)
 
 # 4. Verify linting after automatic fixes
 Invoke-Check -Name "Final linting verification" -Arguments @(
