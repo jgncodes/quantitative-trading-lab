@@ -9,12 +9,12 @@
 | Language | Python 3.12 |
 | Market data provider | `yfinance` only |
 | Current phase | Phase 0 — Core infrastructure |
-| Current step | Step 2 — Testing infrastructure and GitHub Actions |
-| Phase 0 progress | 1/10 steps confirmed complete |
+| Current step | Step 3 — Historical market data collection |
+| Phase 0 progress | 2/10 steps confirmed complete |
 | First strategy project | Project 01 — Pairs Trading |
 | Last updated | 2026-11-24 |
 
-Step 1 is complete based on the user's confirmation on 2026-11-24 and terminal screenshots showing successful editable installation, local import and package builds. Step 2 is in progress; its local quality checks and GitHub workflow have not yet been verified. See the development log for evidence and remaining uncertainties.
+Step 1 is complete based on the user's confirmation on 2026-11-24 and terminal screenshots showing successful editable installation, local import and package builds. Step 2 is complete per the user’s confirmation on 2026-11-24. Exact local test counts, coverage, remote CI results and commit hash were not independently inspected. Step 3 is in progress. See the development log for evidence and remaining uncertainties.
 
 ## 1. Project vision
 
@@ -151,8 +151,8 @@ Only the data layer should directly call `yfinance`. Strategies receive standard
 | Step | Deliverable | Status | Estimated focused effort |
 | --- | --- | --- | --- |
 | 1 | Repository initialization and Python packaging | Complete | 1–2 hours |
-| 2 | Testing infrastructure and GitHub Actions | In progress | 1–2 hours |
-| 3 | Historical market data collection | Not started | 1–2 hours |
+| 2 | Testing infrastructure and GitHub Actions | Complete | 1–2 hours |
+| 3 | Historical market data collection | In progress | 1–2 hours |
 | 4 | Data validation, preprocessing and caching | Not started | 2–3 hours |
 | 5 | Mathematical and statistical utilities | Not started | 2–4 hours |
 | 6 | Portfolio accounting and position management | Not started | 3–5 hours |
@@ -185,15 +185,18 @@ Suggested commit: `chore: initialize quantitative trading research package`
 
 ### Step 2 — Testing infrastructure and GitHub Actions
 
-- [ ] Configure Pytest, pytest-cov, Ruff and Mypy in `pyproject.toml`.
-- [ ] Establish `tests/unit`, `tests/integration` and `tests/fixtures`.
-- [ ] Add a minimal package smoke test.
-- [ ] Create `.github/workflows/ci.yml` for pushes and pull requests.
-- [ ] Install locked dependencies and run linting, formatting, tests, coverage and type checks (using documented scope).
-- [ ] Ensure default CI needs neither network market-data requests nor credentials.
-- [ ] Verify checks locally and on GitHub, if the remote exists.
+- [x] Configure Pytest, pytest-cov, Ruff and Mypy in `pyproject.toml`.
+- [x] Establish `tests/unit`, `tests/integration` and `tests/fixtures`.
+- [x] Add a minimal package smoke test.
+- [x] Create `.github/workflows/ci.yml` for pushes and pull requests.
+- [x] Install locked dependencies and run linting, formatting, tests, coverage and type checks (using documented scope).
+- [x] Ensure default CI needs neither network market-data requests nor credentials.
+- [x] Verify checks locally (completion user-confirmed).
+- [ ] Independently record GitHub Actions results when available; remote status was not supplied.
 
 **Acceptance:** repeatable local checks pass; CI is configured and actual GitHub status is recorded when available. Introduce coverage thresholds once meaningful core functionality exists.
+
+Completion is user-confirmed. The planned Windows PowerShell script `scripts/check.ps1` was upgraded to apply safe Ruff lint fixes and formatting locally, then recheck lint/format before Mypy, tests, coverage and build. CI remains check-only. Exact script contents, CI outcome, coverage and commit hash were not independently inspected.
 
 Suggested commit: `ci: establish automated tests and code quality checks`
 
@@ -208,6 +211,16 @@ Suggested commit: `ci: establish automated tests and code quality checks`
 - [ ] Run an optional manual live smoke check for a stock and cryptocurrency.
 
 **Acceptance:** the loader returns predictable data for supported instruments and clear errors for failed requests. No other market data provider is added.
+
+Implementation plan (Step 3 in progress; not yet verified):
+
+- Install `yfinance`, `pandas`, `numpy` and development-only `pandas-stubs` using uv.
+- Add `src/quantlab/data/__init__.py`, `loader.py`, `exceptions.py`, `tests/unit/test_data_loader.py` and `scripts/download_demo.py`.
+- Public API: `load_historical_data(tickers, start_date, end_date) -> dict[str, pandas.DataFrame]`; one or multiple tickers; uppercase normalized symbols; daily frequency only; inclusive start and exclusive end dates.
+- Request ticker-first MultiIndex columns explicitly and handle flat columns for a single ticker. Preserve Yahoo field names, separate Adj Close, and per-ticker observations; omit missing-close rows (including padding from combined calendars). Never forward-fill. Use explicit `auto_adjust=False`, `actions=False`, `ignore_tz=True`, `threads=False` and timeout. Reject missing/all-empty ticker responses rather than silently return partial data.
+- Define `MarketDataError` for provider/response failures; invalid arguments raise `ValueError`.
+- Keep cache, canonical long-form schema, comprehensive validation, currency and corporate action policies in Step 4. Yahoo close/OHLC are not assumed to be original executable prices.
+- Run mocked tests offline with the existing local quality script and CI. Run manual demo separately; do not commit raw data.
 
 Suggested commit: `feat: implement Yahoo Finance historical data loader`
 
@@ -515,7 +528,7 @@ The project README must state the question, theory, data, assumptions, reproduct
 
 ### Local quality checks
 
-The following are the proposed Step 2 command conventions. They have not yet been verified locally for this repository. The source-only Mypy scope and package-only coverage scope are intentional for the initial setup.
+The following are the Step 2 command conventions (completion user-confirmed; exact outputs not independently inspected). The local `scripts/check.ps1` applies safe Ruff fixes and formatting before final verification; CI is check-only. The source-only Mypy scope and package-only coverage scope are intentional for the initial setup.
 
 ```bash
 uv sync --locked
@@ -542,7 +555,7 @@ CI should use locked dependencies, run applicable quality checks and produce a c
 
 | Phase | Deliverable | Status |
 | --- | --- | --- |
-| 0 | Core infrastructure | In progress (1/10) |
+| 0 | Core infrastructure | In progress (2/10) |
 | 1 | Traditional statistical trading projects | Planned |
 | 2 | Advanced statistical and stochastic models | Planned |
 | 3 | Portfolio optimization and arbitrage | Planned; some methods deferred for data limitations |
@@ -556,11 +569,11 @@ The numbered levels in the strategy catalog describe approximate difficulty; the
 
 ### Current checkpoint
 
-- **Last completed step:** Phase 0, Step 1 — Repository initialization and Python packaging (user-confirmed; partial terminal evidence recorded below).
+- **Last completed step:** Phase 0, Step 2 — Testing infrastructure and GitHub Actions (user-confirmed).
 - **Current phase:** Phase 0 — Core infrastructure.
-- **Next action:** Step 2 — Testing infrastructure and GitHub Actions. Install development dependencies, configure tools, add a package smoke test, create the CI workflow, run local checks and verify GitHub results if a remote exists.
+- **Next action:** Step 3 — Historical market data collection. Implement the yfinance-only loader, exceptions and offline mocked tests; run local quality checks and optional live demo; record results and commit before Step 4.
 - **Repository state:** Windows local checkout, branch `main` observed; `quantlab` editable installation and package build successful. Remote URL and final Step 1 commit hash not supplied.
-- **Tests / CI:** Not yet verified. Step 2 configuration is proposed: Pytest discovery in `tests` and `projects`, Ruff lint/format, strict Mypy scoped to `src`, branch coverage of `quantlab`, and a Windows/Linux GitHub Actions matrix. Do not set a coverage threshold yet.
+- **Tests / CI:** Step 2 complete per user confirmation. Planned configuration: Pytest discovery in `tests` and `projects`, Ruff lint/format, strict Mypy scoped to `src`, branch coverage of `quantlab`, and a Windows/Linux GitHub Actions matrix. Local check script auto-fixes safe Ruff issues; CI is check-only. Exact test counts, coverage, remote CI result and commit hash not supplied. No coverage threshold yet.
 - **Known blockers:** Earlier PATH and import issues resolved. Optional environment deletion initially failed due to an access-denied error; user subsequently confirmed Step 1 complete, but final clean-environment output was not shown. No known active blocker. Exact license text not inspected.
 - **Data source:** `yfinance` only. Do not add CoinGecko, Alpaca, CCXT or any other provider unless the scope is explicitly changed later.
 - **User workflow:** Work through one development step at a time, explain what is being built and why, test before progressing, suggest a descriptive Git commit, and update this file after verified milestones.
@@ -571,7 +584,8 @@ The numbered levels in the strategy catalog describe approximate difficulty; the
 | --- | --- | --- | --- |
 | 2026-11-24 | Planning | Agreed on a reusable, tested, yfinance-only quantitative research repository; defined Phase 0 and selected Pairs Trading as the first project. | Planning document only; no implementation verified. |
 | 2026-11-24 | Phase 0, Step 1 | Completed repository initialization and Python packaging, per user confirmation. Added minimal `quantlab` package, `pyproject.toml`, lockfile and initial documentation. `.gitattributes` and missing `.gitkeep` files were recommended during final review. | Terminal evidence: Python 3.12.9; editable installation; successful import from local source; built `.tar.gz` and `.whl`. Final clean recreation and commit hash not separately shown. |
-| 2026-11-24 | Phase 0, Step 2 | Began testing and CI setup. Proposed Pytest, pytest-cov, Ruff, Mypy, smoke test and Windows/Linux CI. | Pending local and remote verification; no tests or CI results claimed. |
+| 2026-11-24 | Phase 0, Step 2 | User confirmed completion of testing and CI setup. Local check script upgraded to automatically apply safe Ruff fixes and formatting, then verify; CI remains check-only. | User-confirmed completion; exact test counts, coverage, remote CI results and commit hash not independently inspected. |
+| 2026-11-24 | Phase 0, Step 3 | Started historical market data collection. Planned yfinance-only daily loader, explicit adjustment and date semantics, response normalization, errors, mocked tests and manual demo. | Implementation and checks pending. |
 
 ### How to update this file
 
@@ -607,4 +621,4 @@ Upload the latest `ROADMAP.md` to the new chat (and share the current repository
 
 ---
 
-**Next milestone: complete Phase 0, Step 2 — Testing infrastructure and GitHub Actions.**
+**Next milestone: complete Phase 0, Step 3 — Historical market data collection.**
