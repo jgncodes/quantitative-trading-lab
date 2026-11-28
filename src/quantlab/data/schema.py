@@ -7,13 +7,17 @@ from quantlab.data.loader import _normalize_tickers
 SCHEMA_VERSION = 1
 PRICE_COLUMNS = ("open", "high", "low", "close", "adjusted_close")
 NUMERIC_COLUMNS = (*PRICE_COLUMNS, "volume")
-COLUMNS = (
-    "timestamp", "symbol", "asset_class", *NUMERIC_COLUMNS, "currency", "source"
+COLUMNS = ("timestamp", "symbol", "asset_class", *NUMERIC_COLUMNS, "currency", "source")
+ASSET_CLASSES = frozenset(
+    {"equity", "etf", "crypto", "forex", "index", "futures", "other"}
 )
-ASSET_CLASSES = frozenset({"equity", "etf", "crypto", "forex", "index", "futures", "other"})
 YAHOO_COLUMNS = {
-    "Open": "open", "High": "high", "Low": "low", "Close": "close",
-    "Adj Close": "adjusted_close", "Volume": "volume",
+    "Open": "open",
+    "High": "high",
+    "Low": "low",
+    "Close": "close",
+    "Adj Close": "adjusted_close",
+    "Volume": "volume",
 }
 
 

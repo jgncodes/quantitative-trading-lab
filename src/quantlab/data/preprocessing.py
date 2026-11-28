@@ -18,7 +18,9 @@ def normalize_market_data(
     if not symbols or len(set(symbols)) != len(symbols):
         raise ValueError("Provide a nonempty sequence of unique instruments.")
     if set(raw) != set(symbols):
-        raise DataValidationError("Downloaded symbols do not match requested instruments.")
+        raise DataValidationError(
+            "Downloaded symbols do not match requested instruments."
+        )
 
     frames: list[pd.DataFrame] = []
     for item in instruments:
@@ -27,7 +29,9 @@ def normalize_market_data(
             raise DataValidationError(f"Invalid source columns or rows: {item.symbol}.")
         if not isinstance(frame.index, pd.DatetimeIndex):
             raise DataValidationError("Expected a daily DatetimeIndex.")
-        dates = frame.index.tz_localize(None) if frame.index.tz is not None else frame.index
+        dates = (
+            frame.index.tz_localize(None) if frame.index.tz is not None else frame.index
+        )
         if dates.hasnans or not dates.equals(dates.normalize()):
             raise DataValidationError("Daily data must use midnight session labels.")
         normalized = pd.DataFrame({"timestamp": dates}, index=range(len(frame)))
@@ -37,14 +41,24 @@ def normalize_market_data(
                 normalized[column] = np.nan
                 continue
             try:
-                normalized[column] = pd.to_numeric(renamed[column], errors="raise").astype(
-                    "float64"
-                ).to_numpy()
+                normalized[column] = (
+                    pd.to_numeric(renamed[column], errors="raise")
+                    .astype("float64")
+                    .to_numpy()
+                )
             except (TypeError, ValueError) as exc:
-                raise DataValidationError(f"Invalid numeric field: {item.symbol}/{column}.") from exc
-        for column, value in (("symbol", item.symbol), ("asset_class", item.asset_class),
-                              ("currency", item.currency), ("source", "yfinance")):
-            normalized[column] = pd.Series(value, index=normalized.index, dtype="string")
+                raise DataValidationError(
+                    f"Invalid numeric field: {item.symbol}/{column}."
+                ) from exc
+        for column, value in (
+            ("symbol", item.symbol),
+            ("asset_class", item.asset_class),
+            ("currency", item.currency),
+            ("source", "yfinance"),
+        ):
+            normalized[column] = pd.Series(
+                value, index=normalized.index, dtype="string"
+            )
         frames.append(normalized.loc[:, list(COLUMNS)])
 
     result = pd.concat(frames, ignore_index=True).sort_values(

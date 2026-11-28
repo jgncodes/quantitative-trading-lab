@@ -35,7 +35,9 @@ def _validate_request_data(
     if (frame["timestamp"] < pd.Timestamp(start)).any() or (
         frame["timestamp"] >= pd.Timestamp(end)
     ).any():
-        raise DataValidationError("Dataset contains observations outside request range.")
+        raise DataValidationError(
+            "Dataset contains observations outside request range."
+        )
     for item in instruments:
         rows = frame.loc[frame["symbol"] == item.symbol]
         if not rows["asset_class"].eq(item.asset_class).all():
@@ -43,7 +45,10 @@ def _validate_request_data(
         if item.currency is None:
             matches = rows["currency"].isna().all()
         else:
-            matches = rows["currency"].notna().all() and rows["currency"].eq(item.currency).all()
+            matches = (
+                rows["currency"].notna().all()
+                and rows["currency"].eq(item.currency).all()
+            )
         if not matches:
             raise DataValidationError("Instrument currency mismatch.")
 
@@ -76,7 +81,9 @@ def get_market_data(
         "end_date": end_date,
         "instruments": [asdict(item) for item in items],
     }
-    key = hashlib.sha256(json.dumps(request, sort_keys=True).encode("utf-8")).hexdigest()
+    key = hashlib.sha256(
+        json.dumps(request, sort_keys=True).encode("utf-8")
+    ).hexdigest()
     directory = Path(cache_dir)
     parquet_path = directory / f"{key}.parquet"
     metadata_path = directory / f"{key}.json"
@@ -84,7 +91,9 @@ def get_market_data(
     if not refresh and (parquet_path.exists() or metadata_path.exists()):
         try:
             metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-            if metadata["request"] != request or metadata["sha256"] != _digest(parquet_path):
+            if metadata["request"] != request or metadata["sha256"] != _digest(
+                parquet_path
+            ):
                 raise ValueError("Cache request or checksum mismatch.")
             frame = pd.read_parquet(parquet_path, engine="pyarrow")
             if len(frame) != metadata["rows"]:
@@ -92,7 +101,9 @@ def get_market_data(
             _validate_request_data(frame, items, start_date, end_date)
             return frame
         except Exception as exc:
-            raise CacheError(f"Invalid cache entry {key}; retry with refresh=True.") from exc
+            raise CacheError(
+                f"Invalid cache entry {key}; retry with refresh=True."
+            ) from exc
 
     raw = load_historical_data(symbols, start_date, end_date)
     frame = normalize_market_data(raw, items)

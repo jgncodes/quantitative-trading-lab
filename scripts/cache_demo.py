@@ -9,7 +9,10 @@ from quantlab.data.schema import Instrument
 
 def main() -> None:
     """Demonstrate the cache using observed equity and crypto sessions."""
-    instruments = [Instrument("AAPL", "equity", "USD"), Instrument("BTC-USD", "crypto", "USD")]
+    instruments = [
+        Instrument("AAPL", "equity", "USD"),
+        Instrument("BTC-USD", "crypto", "USD"),
+    ]
     cache_dir = Path(__file__).resolve().parents[1] / "data" / "cache"
     data = get_market_data(instruments, "2025-01-01", "2026-01-01", cache_dir=cache_dir)
     print("Canonical data:")

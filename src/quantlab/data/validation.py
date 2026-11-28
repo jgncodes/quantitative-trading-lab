@@ -54,7 +54,12 @@ def validate_market_data(frame: pd.DataFrame) -> None:
             raise DataValidationError("Negative trading volume.")
 
     # Small numerical tolerance for vendor rounding; missing values remain missing.
-    for lower, upper in (("low", "high"), ("low", "open"), ("low", "close"),
-                         ("open", "high"), ("close", "high")):
+    for lower, upper in (
+        ("low", "high"),
+        ("low", "open"),
+        ("low", "close"),
+        ("open", "high"),
+        ("close", "high"),
+    ):
         if (frame[lower] - frame[upper] > 1e-8 + 1e-6 * frame[upper].abs()).any():
             raise DataValidationError(f"Inconsistent OHLC values: {lower} > {upper}.")

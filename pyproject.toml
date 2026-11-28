@@ -34,7 +34,7 @@ testpaths = ["tests", "projects"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-ra --strict-markers --strict-config --import-mode=importlib"
+addopts = "-ra --strict-markers --strict-config --import-mode=importlib --basetemp=.pytest-tmp"
 markers = [
     "integration: tests involving multiple internal components",
     "slow: tests that require additional execution time",
