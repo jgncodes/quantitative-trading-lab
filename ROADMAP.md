@@ -9,12 +9,12 @@
 | Language | Python 3.12 |
 | Market data provider | `yfinance` only |
 | Current phase | Phase 0 — Core infrastructure |
-| Current step | Step 3 — Historical market data collection |
-| Phase 0 progress | 2/10 steps confirmed complete |
+| Current step | Step 4 — Data validation, preprocessing and Parquet caching |
+| Phase 0 progress | 3/10 steps confirmed complete |
 | First strategy project | Project 01 — Pairs Trading |
-| Last updated | 2026-11-24 |
+| Last updated | 2026-11-25 |
 
-Step 1 is complete based on the user's confirmation on 2026-11-24 and terminal screenshots showing successful editable installation, local import and package builds. Step 2 is complete per the user’s confirmation on 2026-11-24. Exact local test counts, coverage, remote CI results and commit hash were not independently inspected. Step 3 is in progress. See the development log for evidence and remaining uncertainties.
+Step 1 is complete based on the user's confirmation on 2026-11-24 and terminal screenshots showing successful editable installation, local import and package builds. Step 2 is complete per the user’s confirmation on 2026-11-24. Exact local test counts, coverage, remote CI results and commit hash were not independently inspected. Step 3 is complete per the user’s confirmation on 2026-11-25; exact test counts, live demo output, CI and commit hash were not supplied. Step 4 is in progress. See the development log for evidence and remaining uncertainties.
 
 ## 1. Project vision
 
@@ -152,8 +152,8 @@ Only the data layer should directly call `yfinance`. Strategies receive standard
 | --- | --- | --- | --- |
 | 1 | Repository initialization and Python packaging | Complete | 1–2 hours |
 | 2 | Testing infrastructure and GitHub Actions | Complete | 1–2 hours |
-| 3 | Historical market data collection | In progress | 1–2 hours |
-| 4 | Data validation, preprocessing and caching | Not started | 2–3 hours |
+| 3 | Historical market data collection | Complete | 1–2 hours |
+| 4 | Data validation, preprocessing and caching | In progress | 2–3 hours |
 | 5 | Mathematical and statistical utilities | Not started | 2–4 hours |
 | 6 | Portfolio accounting and position management | Not started | 3–5 hours |
 | 7 | Backtesting and execution engine | Not started | 4–8 hours |
@@ -202,17 +202,17 @@ Suggested commit: `ci: establish automated tests and code quality checks`
 
 ### Step 3 — Historical market data collection
 
-- [ ] Implement the isolated `yfinance` loader for one or multiple tickers, date ranges and daily frequency.
-- [ ] Normalize single-ticker and multi-ticker response layouts.
-- [ ] Handle invalid requests, empty results, partial ticker failures and network errors explicitly.
-- [ ] Define start/end-date semantics (Yahoo download end dates are exclusive) and price-adjustment behavior explicitly.
-- [ ] Support equities, ETFs and crypto ticker formats.
-- [ ] Write mocked provider tests with no live calls in CI.
-- [ ] Run an optional manual live smoke check for a stock and cryptocurrency.
+- [x] Implement the isolated `yfinance` loader for one or multiple tickers, date ranges and daily frequency.
+- [x] Normalize single-ticker and multi-ticker response layouts.
+- [x] Handle invalid requests, empty results, partial ticker failures and network errors explicitly.
+- [x] Define start/end-date semantics (Yahoo download end dates are exclusive) and price-adjustment behavior explicitly.
+- [x] Support equities, ETFs and crypto ticker formats.
+- [x] Write mocked provider tests with no live calls in CI.
+- [ ] Independently record the optional live stock/crypto smoke check output when available (not supplied).
 
 **Acceptance:** the loader returns predictable data for supported instruments and clear errors for failed requests. No other market data provider is added.
 
-Implementation plan (Step 3 in progress; not yet verified):
+Implementation plan (Step 3 user-confirmed complete; exact implementation and verification outputs not independently inspected):
 
 - Install `yfinance`, `pandas`, `numpy` and development-only `pandas-stubs` using uv.
 - Add `src/quantlab/data/__init__.py`, `loader.py`, `exceptions.py`, `tests/unit/test_data_loader.py` and `scripts/download_demo.py`.
@@ -249,6 +249,16 @@ Initial schema (exact implementation to be finalized during this step):
 | `source` | `yfinance` |
 
 Set `auto_adjust` explicitly rather than relying on changing defaults. Do not confuse adjusted series with raw executable prices, or count dividends twice. Do not aggregate assets in different currencies without an explicit conversion method; initial portfolio tests can use USD instruments.
+
+Implementation plan (Step 4 in progress; proposed code supplied as `phase0_step4.zip`):
+
+- Install `pyarrow` with `uv add pyarrow`. Keep `yfinance` as the only data provider. Preserve the Step 3 `load_historical_data` API and existing tests.
+- Add `src/quantlab/data/schema.py`, `validation.py`, `preprocessing.py`, `cache.py`, `tests/unit/test_market_data.py`, `scripts/cache_demo.py`, and `docs/data_sources.md`. Update `data/__init__.py` to export the new functions if desired; keep existing exports.
+- `Instrument(symbol, asset_class, currency=None)` takes researcher-supplied metadata (not inferred or independently verified). Normalize to canonical `timestamp`, `symbol`, `asset_class`, `open`, `high`, `low`, `close`, `adjusted_close`, `volume`, `currency`, `source` columns. Validate positive finite prices, nonnegative volume, OHLC bounds with rounding tolerance, duplicate keys, required values and per-symbol metadata. Optional fields stay missing. Negative-price instruments are outside this initial schema.
+- Treat daily dates as timezone-naive midnight session labels (not executable timestamps). Preserve local date when removing timezone; reject intraday labels. `align_prices` supports observed-date inner intersection and outer union without filling; default field is `adjusted_close`, and users must explicitly select `close` if adjusted data is unavailable. No full exchange-calendar validation, same-instant cross-asset alignment or FX conversion yet.
+- `get_market_data(instruments, start_date, end_date, cache_dir=Path("data/cache"), refresh=False)` wraps the existing loader and returns canonical data. Key uses sorted instruments, metadata, dates, schema version and fixed options. Each entry has a Parquet file and JSON manifest recording request, retrieval time, row count and SHA-256 checksum. Validate content on reads, explicitly refresh invalid entries, stage writes before replacement, and assume one writer at a time. No TTL or range merging. Cache snapshots are not point-in-time archives or proof of complete session coverage.
+- Preserve reported OHLC and separately reported adjusted close. No invented prices, dividends or corporate-action accounting; adjusted close is not an execution price. Step 6/7 must define simulation policy.
+- Proposed test file contains 23 cases; 15 non-Parquet cases passed in the assistant's isolated Pandas 2.2.3 environment with temporary Step 3 loader/exceptions stand-ins. Eight Parquet-dependent cases were not run because PyArrow is not installed there. Actual repository, local dependency versions, strict Mypy/Ruff, Windows CI, and live demo have not been verified. Run all tests locally, including the real Parquet round-trip, and run the manual demo twice before marking Step 4 complete.
 
 **Acceptance:** normalized data can be cached, loaded and validated consistently, with documented calendar and adjustment semantics.
 
@@ -555,7 +565,7 @@ CI should use locked dependencies, run applicable quality checks and produce a c
 
 | Phase | Deliverable | Status |
 | --- | --- | --- |
-| 0 | Core infrastructure | In progress (2/10) |
+| 0 | Core infrastructure | In progress (3/10) |
 | 1 | Traditional statistical trading projects | Planned |
 | 2 | Advanced statistical and stochastic models | Planned |
 | 3 | Portfolio optimization and arbitrage | Planned; some methods deferred for data limitations |
@@ -569,12 +579,12 @@ The numbered levels in the strategy catalog describe approximate difficulty; the
 
 ### Current checkpoint
 
-- **Last completed step:** Phase 0, Step 2 — Testing infrastructure and GitHub Actions (user-confirmed).
+- **Last completed step:** Phase 0, Step 3 — Historical market data collection (user-confirmed).
 - **Current phase:** Phase 0 — Core infrastructure.
-- **Next action:** Step 3 — Historical market data collection. Implement the yfinance-only loader, exceptions and offline mocked tests; run local quality checks and optional live demo; record results and commit before Step 4.
+- **Next action:** Step 4 — Data validation, preprocessing and Parquet caching. Install PyArrow, integrate the supplied Step 4 files, run `scripts/check.ps1` and `uv run python scripts/cache_demo.py` twice; verify cache reuse, no fabricated bars and CI. Record results and commit before Step 5.
 - **Repository state:** Windows local checkout, branch `main` observed; `quantlab` editable installation and package build successful. Remote URL and final Step 1 commit hash not supplied.
-- **Tests / CI:** Step 2 complete per user confirmation. Planned configuration: Pytest discovery in `tests` and `projects`, Ruff lint/format, strict Mypy scoped to `src`, branch coverage of `quantlab`, and a Windows/Linux GitHub Actions matrix. Local check script auto-fixes safe Ruff issues; CI is check-only. Exact test counts, coverage, remote CI result and commit hash not supplied. No coverage threshold yet.
-- **Known blockers:** Earlier PATH and import issues resolved. Optional environment deletion initially failed due to an access-denied error; user subsequently confirmed Step 1 complete, but final clean-environment output was not shown. No known active blocker. Exact license text not inspected.
+- **Tests / CI:** Steps 2 and 3 complete per user confirmation; exact Step 3 outputs not supplied. Planned configuration: Pytest discovery in `tests` and `projects`, Ruff lint/format, strict Mypy scoped to `src`, branch coverage of `quantlab`, and a Windows/Linux GitHub Actions matrix. Local check script auto-fixes safe Ruff issues; CI is check-only. Exact test counts, coverage, remote CI result and commit hash not supplied. No coverage threshold yet.
+- **Known blockers:** Earlier PATH and import issues resolved. Optional environment deletion initially failed due to an access-denied error; user subsequently confirmed Step 1 complete, but final clean-environment output was not shown. No known active blocker in the user’s repository. Step 4 full integration and Parquet tests are pending; exact license text not inspected.
 - **Data source:** `yfinance` only. Do not add CoinGecko, Alpaca, CCXT or any other provider unless the scope is explicitly changed later.
 - **User workflow:** Work through one development step at a time, explain what is being built and why, test before progressing, suggest a descriptive Git commit, and update this file after verified milestones.
 
@@ -585,7 +595,9 @@ The numbered levels in the strategy catalog describe approximate difficulty; the
 | 2026-11-24 | Planning | Agreed on a reusable, tested, yfinance-only quantitative research repository; defined Phase 0 and selected Pairs Trading as the first project. | Planning document only; no implementation verified. |
 | 2026-11-24 | Phase 0, Step 1 | Completed repository initialization and Python packaging, per user confirmation. Added minimal `quantlab` package, `pyproject.toml`, lockfile and initial documentation. `.gitattributes` and missing `.gitkeep` files were recommended during final review. | Terminal evidence: Python 3.12.9; editable installation; successful import from local source; built `.tar.gz` and `.whl`. Final clean recreation and commit hash not separately shown. |
 | 2026-11-24 | Phase 0, Step 2 | User confirmed completion of testing and CI setup. Local check script upgraded to automatically apply safe Ruff fixes and formatting, then verify; CI remains check-only. | User-confirmed completion; exact test counts, coverage, remote CI results and commit hash not independently inspected. |
-| 2026-11-24 | Phase 0, Step 3 | Started historical market data collection. Planned yfinance-only daily loader, explicit adjustment and date semantics, response normalization, errors, mocked tests and manual demo. | Implementation and checks pending. |
+| 2026-11-24 | Phase 0, Step 3 | Started historical market data collection. Planned yfinance-only daily loader, explicit adjustment and date semantics, response normalization, errors, mocked tests and manual demo. | Implementation and checks pending at that time. |
+| 2026-11-25 | Phase 0, Step 3 | User confirmed completion of historical market data collection. | User-confirmed; local tests, coverage, live demo, CI and commit hash not independently inspected. |
+| 2026-11-25 | Phase 0, Step 4 | Started validation, canonical schema, explicit alignment and request-addressed Parquet cache; supplied implementation and offline tests. | 15 non-Parquet cases passed with isolated loader stand-ins; 8 Parquet cases, full repo quality checks and actual CI pending. |
 
 ### How to update this file
 
@@ -621,4 +633,4 @@ Upload the latest `ROADMAP.md` to the new chat (and share the current repository
 
 ---
 
-**Next milestone: complete Phase 0, Step 3 — Historical market data collection.**
+**Next milestone: complete Phase 0, Step 4 — Data validation, preprocessing and Parquet caching.**
